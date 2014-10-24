@@ -21,22 +21,14 @@ function client(projectId, apiKey) {
 	client.connection.socket.setKeepAlive(true, 10000);
 	
 	client.on('online', function() {
-		console.log('on');
 		events.emit('connected');
 	});
 	
 	client.on('connection', function() {
-		console.log('connected');
-		events.emit('connected');
-	});
-	
-	client.on('authenticate', function() {
-		console.log('auth');
-		events.emit('connected');
+		events.emit('connection');
 	});
 	
 	client.on('close', function() {
-		console.log('close');
 		events.emit('disconnected');
 	});
 	
@@ -87,6 +79,8 @@ function client(projectId, apiKey) {
 	events.on('end', function() {
 		client.end();
 	});
+	
+	events.on('send', send);
 	
 	return events;
 }
