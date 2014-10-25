@@ -59,7 +59,7 @@ var GCM = require('node-gcm-ccs');
 var gcm = GCM(<project id>, <api key>);
 
 gcm.on('message', function(messageId, from, category, data) {
-	console.log('received receipt', arguments);
+	console.log('received message', arguments);
 });
 
 gcm.on('receipt', function(messageId, from, category, data) {
@@ -73,6 +73,13 @@ gcm.send(<device id>, { message: 'hello world' }, { delivery_receipt_requested: 
 		console.log('failed to send message');
 	}
 }
+```
+Echo Client
+-----------
+```js
+gcm.on('message', function(_, from, __, data) {
+	gcm.send(from, data);
+});
 ```
 
 Notes on GCM

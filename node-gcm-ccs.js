@@ -92,7 +92,7 @@ module.exports = function client(projectId, apiKey) {
 						});
 					
 						if (data.data)
-							emit('message', data.message_id, data.from, data.category, data.data);
+							events.emit('message', data.message_id, data.from, data.category, data.data);
 					}
 					
 					break;
@@ -107,7 +107,7 @@ module.exports = function client(projectId, apiKey) {
 		var messageId = crypto.randomBytes(8).toString('hex');
 	
 		var data = {
-			to: to[i],
+			to: to,
 			message_id: messageId,
 			data: data
 		};
