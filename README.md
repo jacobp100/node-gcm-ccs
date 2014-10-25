@@ -24,16 +24,14 @@ Send Message
 ------------
 Use `send` to send a message.
 ```
-gcm.send(to, data, options, [callback]);
+gcm.send(to, data, options, [callback(error, messageId, to)]);
 ```
 Argument | Details
-------------------
+-------- | -------
 to       | A single user
 data     | Data to be sent to the client
 options  | See Message Paremeters from [https://developer.android.com/google/gcm/server.html#send-msg]. If `delivery_receipt_requested = true`, an event will be sent when the message is received by the target.
 callback | `function(error, messageId, to)` called back individually for each target.
-
-Note that GCM performs load balancing, so the connection is sometimes restarted. This library handles this transparently, and your messages will be queued in these situations.
 
 End Connection
 --------------
@@ -81,3 +79,4 @@ Notes on GCM
 ============
 * No events are emitted from GCM or this library when a device new registers: you'll have to send a message from the device and process it yourself
 * This library doesn't have functions to create user notifications ([https://developer.android.com/google/gcm/notifications.html]). However, if you implement this yourself, you'll be able to send to a user group by paassing the `notification_key_name` as a `device_id` for `gcm.send`.
+* Occasionally, GCM performs load balancing, so the connection is sometimes restarted. This library handles this transparently, and your messages will be queued in these situations.
