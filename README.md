@@ -24,14 +24,14 @@ Send Message
 ------------
 Use `send` to send a message.
 ```
-gcm.send(to, data, options, [callback(error, messageId, to)]);
+gcm.send(to, data, [options, callback(error, messageId, to)]);
 ```
-Argument | Details
--------- | -------
-to       | A single user
-data     | Data to be sent to the client
-options  | See Message Paremeters from [https://developer.android.com/google/gcm/server.html#send-msg]. If `delivery_receipt_requested = true`, an event will be sent when the message is received by the target.
-callback | `function(error, messageId, to)` called back individually for each target.
+Argument            | Details
+------------------- | -------
+to                  | A single user
+data                | Data to be sent to the client
+options (optional)  | See Message Paremeters from [https://developer.android.com/google/gcm/server.html#send-msg]. If `delivery_receipt_requested = true`, an event will be sent when the message is received by the target.
+callback (optional) | `function(error, messageId, to)` called back individually for each target.
 
 End Connection
 --------------
