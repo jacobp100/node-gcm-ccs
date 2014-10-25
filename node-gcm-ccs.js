@@ -4,8 +4,11 @@ var xmpp = require('node-xmpp');
 var Events = require('events').EventEmitter;
 var crypto = require('crypto');
 
-function client(projectId, apiKey) {
+module.exports = function client(projectId, apiKey) {
 	var events = new Events();
+	var draining = false;
+	var queued = [];
+	var acks = [];
 	
 	var client = new xmpp.Client({
 		type: 'client',
@@ -20,69 +23,109 @@ function client(projectId, apiKey) {
 	client.connection.socket.setTimeout(0);
 	client.connection.socket.setKeepAlive(true, 10000);
 	
+	function _send(json) {
+		if (draining) {
+			queued.push(json);
+		} else {
+			var message = new xmpp.Element('message').c('gcm', { xmlns: 'google:mobile:data' }).t(JSON.stringify(json));
+			client.send(message);
+		}
+	}
+	
 	client.on('online', function() {
 		events.emit('connected');
-	});
-	
-	client.on('connection', function() {
-		events.emit('connection');
+		
+		if (draining) {
+			draining = false;
+			var i = queued.length;
+			while (--i)
+				_send(queued[i]);
+			queued = [];
+		}
 	});
 	
 	client.on('close', function() {
-		events.emit('disconnected');
+		if (draining)
+			client.connect;
+		else
+			events.emit('disconnected');
 	});
-	
-	function _send(json) {
-		var message = new xmpp.Element('message').c('gcm', { xmlns: 'google:mobile:data' }).t(JSON.stringify(json));
-		client.send(message);
-	}
+
+	client.on('error', function(e) {
+		events.emit('error', e);
+	});
 
 	client.on('stanza', function(stanza) {
 		if (stanza.is('message') && stanza.attrs.type !== 'error') {
 			var data = JSON.parse(stanza.getChildText('gcm'));
-
-			if (data && data.message_type != 'ack' && data.message_type != 'nack') {
-				_send({
-					to: data.from,
-					message_id: data.message_id,
-					message_type: 'ack'
-				});
-				
-				events.emit('message', data);
-			}/* else {
-				Need to do something more here for a nack.
-			}*/
+			
+			if (!data || !data.message_id)
+				return;
+			
+			switch (data.message_type) {
+				case 'control':
+					if (data.control_type === 'CONNECTION_DRAINING')
+						draining = true;
+					break;
+					
+				case 'nack':
+					if (data.message_id in acks)
+						acks[data.message_id](data.error);
+					break;
+					
+				case 'ack':
+					if (data.message_id in acks)
+						acks[data.message_id](undefined, data.message_id, data.to);
+					break;
+					
+				case 'receipt':
+					events.emit('receipt', data.message_id, data.from, data.category, data.data);
+					break;
+					
+				default:
+					// Send ack, as per spec
+					if (data.from) {
+						_send({
+							to: data.from,
+							message_id: data.message_id,
+							message_type: 'ack'
+						});
+					
+						if (data.data)
+							emit('message', data.message_id, data.from, data.category, data.data);
+					}
+					
+					break;
+			}
+		} else {
+			var message = stanza.getChildText('error').getChildText('text');
+			events.emit('message-error', message);
 		}
 	});
-
-	client.on('error', function(e) {
-		console.log('fail on', arguments);
-		events.emit('error', e);
-	});
 	
-	function send(to, data, options) {
+	function send(to, data, options, cb) {
 		var messageId = crypto.randomBytes(8).toString('hex');
-		
+	
 		var data = {
+			to: to[i],
 			message_id: messageId,
-			to: to,
 			data: data
 		};
 		for (option in options)
 			data[option] = options[option];
-		
+	
+		if (cb !== undefined)
+			acks[messageId] = cb;
+	
 		_send(data);
-		
-		return messageId;
 	}
 	
-	events.on('end', function() {
+	function end() {
 		client.end();
-	});
+	}
 	
-	events.on('send', send);
+	events.end = end;
+	events.send = send;
 	
 	return events;
 }
-
-module.exports = client;
