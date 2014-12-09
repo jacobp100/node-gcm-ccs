@@ -111,7 +111,7 @@ module.exports = function client(projectId, apiKey) {
 			message_id: messageId,
 			data: data
 		};
-		for (option in options)
+		for (var option in options)
 			data[option] = options[option];
 	
 		if (cb !== undefined)
