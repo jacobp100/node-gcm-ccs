@@ -8,7 +8,7 @@ npm install git+https://github.com/jacobp100/node-gcm-ccs.git
 Use via
 ```js
 var GCM = require('node-gcm-ccs');
-var gcm = GCM(<project id>, <api key>);
+var gcm = GCM(<project number>, <api key>);
 ```
 
 Getting an API Key
