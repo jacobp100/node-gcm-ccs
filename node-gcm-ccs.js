@@ -1,15 +1,15 @@
-"use strict"
+"use strict";
 
 var xmpp = require('node-xmpp');
 var Events = require('events').EventEmitter;
 var crypto = require('crypto');
 
-module.exports = function client(projectId, apiKey) {
+module.exports = function GCMClient(projectId, apiKey) {
 	var events = new Events();
 	var draining = false;
 	var queued = [];
 	var acks = [];
-	
+
 	var client = new xmpp.Client({
 		type: 'client',
 		jid: projectId + '@gcm.googleapis.com',
@@ -19,10 +19,10 @@ module.exports = function client(projectId, apiKey) {
 		legacySSL: true,
 		preferredSaslMechanism : 'PLAIN'
 	});
-	
+
 	client.connection.socket.setTimeout(0);
 	client.connection.socket.setKeepAlive(true, 10000);
-	
+
 	function _send(json) {
 		if (draining) {
 			queued.push(json);
@@ -31,24 +31,26 @@ module.exports = function client(projectId, apiKey) {
 			client.send(message);
 		}
 	}
-	
+
 	client.on('online', function() {
 		events.emit('connected');
-		
+
 		if (draining) {
 			draining = false;
 			var i = queued.length;
-			while (--i)
+			while (--i) {
 				_send(queued[i]);
+			}
 			queued = [];
 		}
 	});
-	
+
 	client.on('close', function() {
-		if (draining)
-			client.connect;
-		else
+		if (draining) {
+			client.connect();
+		} else {
 			events.emit('disconnected');
+		}
 	});
 
 	client.on('error', function(e) {
@@ -58,30 +60,34 @@ module.exports = function client(projectId, apiKey) {
 	client.on('stanza', function(stanza) {
 		if (stanza.is('message') && stanza.attrs.type !== 'error') {
 			var data = JSON.parse(stanza.getChildText('gcm'));
-			
-			if (!data || !data.message_id)
+
+			if (!data || !data.message_id) {
 				return;
-			
+			}
+
 			switch (data.message_type) {
 				case 'control':
-					if (data.control_type === 'CONNECTION_DRAINING')
+					if (data.control_type === 'CONNECTION_DRAINING') {
 						draining = true;
+					}
 					break;
-					
+
 				case 'nack':
-					if (data.message_id in acks)
+					if (data.message_id in acks) {
 						acks[data.message_id](data.error);
+					}
 					break;
-					
+
 				case 'ack':
-					if (data.message_id in acks)
+					if (data.message_id in acks) {
 						acks[data.message_id](undefined, data.message_id, data.from);
+					}
 					break;
-					
+
 				case 'receipt':
 					events.emit('receipt', data.message_id, data.from, data.category, data.data);
 					break;
-					
+
 				default:
 					// Send ack, as per spec
 					if (data.from) {
@@ -90,11 +96,12 @@ module.exports = function client(projectId, apiKey) {
 							message_id: data.message_id,
 							message_type: 'ack'
 						});
-					
-						if (data.data)
+
+						if (data.data) {
 							events.emit('message', data.message_id, data.from, data.category, data.data);
+						}
 					}
-					
+
 					break;
 			}
 		} else {
@@ -102,30 +109,32 @@ module.exports = function client(projectId, apiKey) {
 			events.emit('message-error', message);
 		}
 	});
-	
+
 	function send(to, data, options, cb) {
 		var messageId = crypto.randomBytes(8).toString('hex');
-	
-		var data = {
+
+		var outData = {
 			to: to,
 			message_id: messageId,
 			data: data
 		};
-		for (var option in options)
+		Object.keys(options).forEach(function(option) {
 			data[option] = options[option];
-	
-		if (cb !== undefined)
+		});
+
+		if (cb !== undefined) {
 			acks[messageId] = cb;
-	
+		}
+
 		_send(data);
 	}
-	
+
 	function end() {
 		client.end();
 	}
-	
+
 	events.end = end;
 	events.send = send;
-	
+
 	return events;
-}
+};
