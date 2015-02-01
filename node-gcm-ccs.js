@@ -75,7 +75,7 @@ module.exports = function client(projectId, apiKey) {
 					
 				case 'ack':
 					if (data.message_id in acks)
-						acks[data.message_id](undefined, data.message_id, data.to);
+						acks[data.message_id](undefined, data.message_id, data.from);
 					break;
 					
 				case 'receipt':
@@ -111,7 +111,7 @@ module.exports = function client(projectId, apiKey) {
 			message_id: messageId,
 			data: data
 		};
-		for (option in options)
+		for (var option in options)
 			data[option] = options[option];
 	
 		if (cb !== undefined)
