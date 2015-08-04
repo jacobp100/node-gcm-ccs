@@ -1,17 +1,24 @@
 {
   "name": "node-gcm-ccs",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Google Cloud Messaging via XMPP",
   "main": "node-gcm-ccs.js",
   "dependencies": {
-    "node-stringprep": "~0.6.2",
-    "node-xmpp": "~1.0.0-alpha2",
-    "node-xmpp-client": "~1.0.0-alpha15"
+    "node-stringprep": "~0.7.2",
+    "node-xmpp-client": "~1.0.0-alpha23"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "BSD-2-Clause"
+  "license": "BSD-2-Clause",
+  "homepage": "https://github.com/jacobp100/node-gcm-ccs",
+  "bugs": {
+      "url": "https://github.com/jacobp100/node-gcm-ccs/issues"
+  },
+  "repository": {
+      "type": "git",
+      "url": "git://github.com/jacobp100/node-gcm-ccs.git"
+  }
 }
