@@ -1,6 +1,6 @@
 "use strict";
 
-var xmpp = require('node-xmpp');
+var xmpp = require('node-xmpp-client');
 var Events = require('events').EventEmitter;
 var crypto = require('crypto');
 
