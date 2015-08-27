@@ -66,13 +66,13 @@ gcm.on('receipt', function(messageId, from, category, data) {
 	console.log('received receipt', arguments);
 });
 
-gcm.send(<device id>, { message: 'hello world' }, { delivery_receipt_requested: true }, function(err, messageId, to)) {
+gcm.send(<device id>, { message: 'hello world' }, { delivery_receipt_requested: true }, function(err, messageId, to) {
 	if (!err) {
 		console.log('sent message to', to, 'with message_id =', messageId);
 	} else {
 		console.log('failed to send message');
 	}
-}
+});
 ```
 Echo Client
 -----------
