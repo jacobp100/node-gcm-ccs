@@ -6,7 +6,7 @@ var crypto = require('crypto');
 
 module.exports = function GCMClient(projectId, apiKey) {
 	var events = new Events();
-	var draining = false;
+	var draining = true;
 	var queued = [];
 	var acks = [];
 
@@ -27,7 +27,7 @@ module.exports = function GCMClient(projectId, apiKey) {
 		if (draining) {
 			queued.push(json);
 		} else {
-			var message = new xmpp.Element('message').c('gcm', { xmlns: 'google:mobile:data' }).t(JSON.stringify(json));
+			var message = new xmpp.Stanza.Element('message').c('gcm', { xmlns: 'google:mobile:data' }).t(JSON.stringify(json));
 			client.send(message);
 		}
 	}
@@ -38,7 +38,7 @@ module.exports = function GCMClient(projectId, apiKey) {
 		if (draining) {
 			draining = false;
 			var i = queued.length;
-			while (--i) {
+			while (i--) {
 				_send(queued[i]);
 			}
 			queued = [];
@@ -75,12 +75,14 @@ module.exports = function GCMClient(projectId, apiKey) {
 				case 'nack':
 					if (data.message_id in acks) {
 						acks[data.message_id](data.error);
+						delete acks[data.message_id];
 					}
 					break;
 
 				case 'ack':
 					if (data.message_id in acks) {
 						acks[data.message_id](undefined, data.message_id, data.from);
+						delete acks[data.message_id];
 					}
 					break;
 
@@ -119,22 +121,25 @@ module.exports = function GCMClient(projectId, apiKey) {
 			data: data
 		};
 		Object.keys(options).forEach(function(option) {
-			data[option] = options[option];
+			outData[option] = options[option];
 		});
 
 		if (cb !== undefined) {
 			acks[messageId] = cb;
 		}
 
-		_send(data);
+		_send(outData);
 	}
 
 	function end() {
 		client.end();
 	}
+	function isReady(){
 
+	 return Object.keys(acks).length <=100;
+	}
 	events.end = end;
 	events.send = send;
-
+	events.isReady= isReady;
 	return events;
 };
