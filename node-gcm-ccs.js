@@ -11,7 +11,6 @@ module.exports = function GCMClient(projectId, apiKey) {
 	var acks = [];
 
 	var client = new xmpp.Client({
-		type: 'client',
 		jid: projectId + '@gcm.googleapis.com',
 		password: apiKey,
 		port: 5235,
