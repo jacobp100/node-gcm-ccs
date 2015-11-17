@@ -5,7 +5,7 @@
   "main": "node-gcm-ccs.js",
   "dependencies": {
     "node-stringprep": "~0.7.2",
-    "node-xmpp-client": "~1.0.0-alpha23"
+    "node-xmpp-client": "~2.1.0"
   },
   "devDependencies": {},
   "scripts": {
