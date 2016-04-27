@@ -73,7 +73,7 @@ module.exports = function GCMClient(projectId, apiKey) {
 
 				case 'nack':
 					if (data.message_id in acks) {
-						acks[data.message_id](data.error);
+						acks[data.message_id](data.error, data.message_id, data.from);
 						delete acks[data.message_id];
 					}
 					break;
